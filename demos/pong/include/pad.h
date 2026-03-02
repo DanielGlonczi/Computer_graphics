@@ -21,7 +21,7 @@ typedef struct Pad
 } Pad;
 
 /**
- * Initialize the pad.
+ * Initialize the  pad.
  * @param x horizontal position of the pad
  * @param table_height height of the table in pixels
  * @param color_theme the color theme of the pad
