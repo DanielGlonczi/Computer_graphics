@@ -48,10 +48,10 @@ void handle_game_events(Game* game)
                 game->is_running = false;
                 break;
             case SDL_SCANCODE_W:
-                set_left_pad_speed(&(game->pong), -100);
+                set_left_pad_speed(&(game->pong), -300);
                 break;
             case SDL_SCANCODE_S:
-                set_left_pad_speed(&(game->pong), +100);
+                set_left_pad_speed(&(game->pong), +300);
                 break;
             case SDL_SCANCODE_Z: /* increase ball radius */
                 if (game->pong.ball.radius < 120.0f) {
