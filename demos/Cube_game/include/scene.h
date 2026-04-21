@@ -2,9 +2,9 @@
 #define SCENE_H
 
 #include "camera.h"
-#include "texture.h"
 
 #include <obj/model.h>
+#include <GL/gl.h>
 
 #define MAX_SCENE_MODELS 8
 
@@ -34,7 +34,6 @@ typedef struct Scene
     int model_count;
     int active_model;
     Material material;
-    GLuint texture_id;
 } Scene;
 
 /**
