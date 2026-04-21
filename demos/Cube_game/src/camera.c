@@ -15,10 +15,17 @@ void init_camera(Camera *camera)
     camera->speed.x = 0.0;
     camera->speed.y = 0.0;
     camera->speed.z = 0.0;
+    camera->target_position = camera->position;
 }
 
 void update_camera(Camera *camera, double time)
 {
+    // Smooth follow the target
+    float smooth_factor = 0.05f;
+    camera->position.x += (camera->target_position.x - camera->position.x) * smooth_factor;
+    camera->position.y += (camera->target_position.y - camera->position.y) * smooth_factor;
+    camera->position.z += (camera->target_position.z - camera->position.z) * smooth_factor;
+
     double angle;
     double side_angle;
 
@@ -76,3 +83,5 @@ void set_camera_side_speed(Camera *camera, double speed)
 {
     camera->speed.x = speed;
 }
+
+

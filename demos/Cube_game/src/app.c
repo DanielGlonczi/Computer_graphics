@@ -204,6 +204,12 @@ void update_app(App *app)
     elapsed_time = current_time - app->uptime;
     app->uptime = current_time;
 
+    // Set camera target to follow the active cube
+    vec3 cube_pos = app->scene.instances[app->scene.active_model].position;
+    app->camera.target_position.x = cube_pos.x;
+    app->camera.target_position.y = cube_pos.y - 5.0f;
+    app->camera.target_position.z = cube_pos.z + 3.0f;
+
     update_camera(&(app->camera), elapsed_time);
     update_scene(&(app->scene), elapsed_time);
 }
@@ -235,3 +241,4 @@ void destroy_app(App *app)
 
     SDL_Quit();
 }
+
