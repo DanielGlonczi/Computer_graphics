@@ -36,6 +36,7 @@ typedef struct Scene
     Material material;
     int collected_count;
     float time_counter;
+    bool finished;
 } Scene;
 
 /**

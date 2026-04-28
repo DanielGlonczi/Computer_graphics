@@ -24,8 +24,7 @@ static int level[16][16] = {
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 static bool is_valid_tile(int x, int y)
 {
@@ -39,15 +38,24 @@ static void draw_tile(int x, int y, int type)
     const float height = 1.0f;
 
     Material mat;
-    if (type == 1) {
+    if (type == 1)
+    {
         mat = (Material){.ambient = {0.10f, 0.30f, 0.45f}, .diffuse = {0.15f, 0.50f, 0.75f}, .specular = {0.10f, 0.10f, 0.10f}, .shininess = 16.0f};
-    } else if (type == 3) {
+    }
+    else if (type == 3)
+    {
         mat = (Material){.ambient = {0.0f, 0.5f, 0.0f}, .diffuse = {0.0f, 1.0f, 0.0f}, .specular = {0.0f, 0.0f, 0.0f}, .shininess = 16.0f}; // Green for finish
-    } else if (type == 4) {
+    }
+    else if (type == 4)
+    {
         mat = (Material){.ambient = {0.5f, 0.5f, 0.0f}, .diffuse = {1.0f, 1.0f, 0.0f}, .specular = {0.0f, 0.0f, 0.0f}, .shininess = 16.0f}; // Yellow for collectible
-    } else if (type == 5) {
+    }
+    else if (type == 5)
+    {
         mat = (Material){.ambient = {0.5f, 0.0f, 0.0f}, .diffuse = {1.0f, 0.0f, 0.0f}, .specular = {0.0f, 0.0f, 0.0f}, .shininess = 16.0f}; // Red for danger
-    } else {
+    }
+    else
+    {
         mat = (Material){.ambient = {0.10f, 0.30f, 0.45f}, .diffuse = {0.15f, 0.50f, 0.75f}, .specular = {0.10f, 0.10f, 0.10f}, .shininess = 16.0f};
     }
     set_material(&mat);
@@ -108,7 +116,7 @@ static void draw_floor_grid(void)
     glEnable(GL_LIGHTING);
 }
 
-static void draw_floor_tiles(void)
+static void draw_floor_tiles(bool finished)
 {
     for (int y = 0; y < LEVEL_HEIGHT; ++y)
     {
@@ -117,7 +125,7 @@ static void draw_floor_tiles(void)
             int type = level[y][x];
             if (type == 1 || type == 3 || type == 4 || type == 5)
             {
-                draw_tile(x, y, type);
+                draw_tile(x, y, finished ? 3 : type);
             }
         }
     }
@@ -197,6 +205,7 @@ void init_scene(Scene *scene)
     scene->active_model = 0;
     scene->collected_count = 0;
     scene->time_counter = 0.0f;
+    scene->finished = false;
 
     if (load_model(&(scene->models[scene->model_count]), "assets/models/cube.obj") == TRUE)
     {
@@ -283,6 +292,11 @@ void update_scene(Scene *scene, double delta_time)
                 if (instance->rotation.z >= 360.0f)
                     instance->rotation.z -= 360.0f;
 
+                if (i == scene->active_model && !scene->finished && (int)instance->position.x == 14 && (int)instance->position.y == 14)
+                {
+                    scene->finished = true;
+                }
+
                 if (instance->will_fall)
                 {
                     instance->is_falling = true;
@@ -315,12 +329,17 @@ void render_scene(const Scene *scene)
     set_material(&(scene->material));
     set_lighting();
     draw_origin();
-    draw_floor_tiles();
+    draw_floor_tiles(scene->finished);
     draw_floor_grid();
 
     for (int i = 0; i < scene->model_count; ++i)
     {
         draw_instance(&(scene->models[i]), &(scene->instances[i]));
+    }
+
+    if (scene->finished)
+    {
+        draw_green_dots();
     }
 }
 
@@ -341,25 +360,28 @@ void draw_origin()
     glEnable(GL_LIGHTING);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void draw_green_dots()
+{
+    glDisable(GL_LIGHTING);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glPointSize(5.0f);
+    glBegin(GL_POINTS);
+    // Add some green dots at various positions
+    glVertex3f(-5.0f, -5.0f, -1.0f);
+    glVertex3f(5.0f, -5.0f, -1.0f);
+    glVertex3f(-5.0f, 5.0f, -1.0f);
+    glVertex3f(5.0f, 5.0f, -1.0f);
+    glVertex3f(0.0f, 0.0f, -1.0f);
+    glVertex3f(-3.0f, 2.0f, -1.0f);
+    glVertex3f(3.0f, -2.0f, -1.0f);
+    glVertex3f(-2.0f, -3.0f, -1.0f);
+    glVertex3f(2.0f, 3.0f, -1.0f);
+    glVertex3f(1.0f, -4.0f, -1.0f);
+    glVertex3f(-1.0f, 4.0f, -1.0f);
+    glVertex3f(4.0f, 1.0f, -1.0f);
+    glVertex3f(-4.0f, -1.0f, -1.0f);
+    glVertex3f(0.5f, 2.5f, -1.0f);
+    glVertex3f(-0.5f, -2.5f, -1.0f);
+    glEnd();
+    glEnable(GL_LIGHTING);
+}
