@@ -22,7 +22,7 @@ typedef struct App
 } App;
 
 /**
- * Initialize the application.
+ * Initialize the application
  */
 void init_app(App* app, int width, int height);
 
