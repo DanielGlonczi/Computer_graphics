@@ -34,6 +34,8 @@ typedef struct Scene
     int model_count;
     int active_model;
     Material material;
+    int collected_count;
+    float time_counter;
 } Scene;
 
 /**
@@ -72,3 +74,5 @@ void render_scene(const Scene* scene);
 void draw_origin();
 
 #endif /* SCENE_H */
+
+

@@ -8,37 +8,49 @@ static const int LEVEL_WIDTH = 16;
 static const int LEVEL_HEIGHT = 16;
 static const int LEVEL_START_X = 1;
 static const int LEVEL_START_Y = 1;
-static const int level[16][16] = {
+static int level[16][16] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 1, 0, 2, 0, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0},
-    {0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-    {0, 1, 1, 1, 0, 2, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0},
-    {0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-    {0, 2, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 2, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-    {0, 0, 0, 2, 0, 0, 1, 0, 2, 0, 0, 1, 0, 2, 0, 0},
-    {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
-    {0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 0, 2, 0, 0, 1, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+    {0, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 static bool is_valid_tile(int x, int y)
 {
-    return x >= 0 && x < LEVEL_WIDTH && y >= 0 && y < LEVEL_HEIGHT && level[y][x] == 1;
+    return x >= 0 && x < LEVEL_WIDTH && y >= 0 && y < LEVEL_HEIGHT && (level[y][x] == 1 || level[y][x] == 3 || level[y][x] == 4);
 }
 
-static void draw_tile(int x, int y)
+static void draw_tile(int x, int y, int type)
 {
     const float tile_z = -2.5f;
     const float half = 0.5f;
     const float height = 1.0f;
 
-    set_material(&(Material){.ambient = {0.10f, 0.30f, 0.45f}, .diffuse = {0.15f, 0.50f, 0.75f}, .specular = {0.10f, 0.10f, 0.10f}, .shininess = 16.0f});
+    Material mat;
+    if (type == 1) {
+        mat = (Material){.ambient = {0.10f, 0.30f, 0.45f}, .diffuse = {0.15f, 0.50f, 0.75f}, .specular = {0.10f, 0.10f, 0.10f}, .shininess = 16.0f};
+    } else if (type == 3) {
+        mat = (Material){.ambient = {0.0f, 0.5f, 0.0f}, .diffuse = {0.0f, 1.0f, 0.0f}, .specular = {0.0f, 0.0f, 0.0f}, .shininess = 16.0f}; // Green for finish
+    } else if (type == 4) {
+        mat = (Material){.ambient = {0.5f, 0.5f, 0.0f}, .diffuse = {1.0f, 1.0f, 0.0f}, .specular = {0.0f, 0.0f, 0.0f}, .shininess = 16.0f}; // Yellow for collectible
+    } else if (type == 5) {
+        mat = (Material){.ambient = {0.5f, 0.0f, 0.0f}, .diffuse = {1.0f, 0.0f, 0.0f}, .specular = {0.0f, 0.0f, 0.0f}, .shininess = 16.0f}; // Red for danger
+    } else {
+        mat = (Material){.ambient = {0.10f, 0.30f, 0.45f}, .diffuse = {0.15f, 0.50f, 0.75f}, .specular = {0.10f, 0.10f, 0.10f}, .shininess = 16.0f};
+    }
+    set_material(&mat);
 
     glBegin(GL_QUADS);
     // Top
@@ -102,9 +114,10 @@ static void draw_floor_tiles(void)
     {
         for (int x = 0; x < LEVEL_WIDTH; ++x)
         {
-            if (level[y][x] == 1)
+            int type = level[y][x];
+            if (type == 1 || type == 3 || type == 4 || type == 5)
             {
-                draw_tile(x, y);
+                draw_tile(x, y, type);
             }
         }
     }
@@ -182,6 +195,8 @@ void init_scene(Scene *scene)
 {
     scene->model_count = 0;
     scene->active_model = 0;
+    scene->collected_count = 0;
+    scene->time_counter = 0.0f;
 
     if (load_model(&(scene->models[scene->model_count]), "assets/models/cube.obj") == TRUE)
     {
@@ -325,6 +340,24 @@ void draw_origin()
     glEnd();
     glEnable(GL_LIGHTING);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

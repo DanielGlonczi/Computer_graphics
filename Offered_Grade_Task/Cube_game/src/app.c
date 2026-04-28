@@ -224,6 +224,11 @@ void render_app(App *app)
     render_scene(&(app->scene));
     glPopMatrix();
 
+    // Update window title with collectible count
+    char title[50];
+    sprintf(title, "Cube! - Collectibles: %d/3", app->scene.collected_count);
+    SDL_SetWindowTitle(app->window, title);
+
     SDL_GL_SwapWindow(app->window);
 }
 
@@ -241,4 +246,5 @@ void destroy_app(App *app)
 
     SDL_Quit();
 }
+
 
