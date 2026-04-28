@@ -152,6 +152,9 @@ void handle_app_events(App *app)
                     app->scene.active_model = (app->scene.active_model + 1) % app->scene.model_count;
                 }
                 break;
+            case SDL_SCANCODE_R:
+                init_scene(&(app->scene));
+                break;
             default:
                 break;
             }
@@ -246,5 +249,3 @@ void destroy_app(App *app)
 
     SDL_Quit();
 }
-
-
