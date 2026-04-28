@@ -319,6 +319,7 @@ void update_scene(Scene *scene, double delta_time)
                 instance->will_fall = false;
                 instance->is_rolling = false;
                 instance->fall_velocity = 0.0f;
+                scene->finished = false;
             }
         }
     }
