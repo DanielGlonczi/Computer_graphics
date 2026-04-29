@@ -35,6 +35,7 @@ typedef struct Scene
     int active_model;
     Material material;
     int collected_count;
+    int total_collectibles;
     float time_counter;
     bool finished;
 } Scene;
@@ -42,12 +43,12 @@ typedef struct Scene
 /**
  * Initialize the scene by loading models.
  */
-void init_scene(Scene* scene);
+void init_scene(Scene *scene);
 
 /**
  * Move the currently active model in the scene.
  */
-void move_active_model(Scene* scene, int dx, int dy);
+void move_active_model(Scene *scene, int dx, int dy);
 
 /**
  * Set the lighting of the scene.
@@ -57,17 +58,17 @@ void set_lighting();
 /**
  * Set the current material.
  */
-void set_material(const Material* material);
+void set_material(const Material *material);
 
 /**
  * Update the scene.
  */
-void update_scene(Scene* scene, double delta_time);
+void update_scene(Scene *scene, double delta_time);
 
 /**
  * Render the scene objects.
  */
-void render_scene(const Scene* scene);
+void render_scene(const Scene *scene);
 
 /**
  * Draw the origin of the world coordinate system.
@@ -75,5 +76,3 @@ void render_scene(const Scene* scene);
 void draw_origin();
 
 #endif /* SCENE_H */
-
-

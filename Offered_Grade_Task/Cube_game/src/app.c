@@ -217,6 +217,55 @@ void update_app(App *app)
     update_scene(&(app->scene), elapsed_time);
 }
 
+static void draw_collectible_hud(const Scene *scene, SDL_Window *window)
+{
+    int width = 800;
+    int height = 600;
+    SDL_GetWindowSize(window, &width, &height);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, (double)width, 0.0, (double)height, -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+
+    int total = scene->total_collectibles;
+    int collected = scene->collected_count;
+    for (int i = 0; i < total; ++i)
+    {
+        float x = 10.0f + i * 30.0f;
+        float y = (float)height - 30.0f;
+        if (i < collected)
+        {
+            glColor3f(0.0f, 1.0f, 0.0f);
+        }
+        else
+        {
+            glColor3f(1.0f, 1.0f, 0.0f);
+        }
+        glBegin(GL_QUADS);
+        glVertex2f(x, y);
+        glVertex2f(x + 24.0f, y);
+        glVertex2f(x + 24.0f, y - 24.0f);
+        glVertex2f(x, y - 24.0f);
+        glEnd();
+    }
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void render_app(App *app)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -227,10 +276,19 @@ void render_app(App *app)
     render_scene(&(app->scene));
     glPopMatrix();
 
-    // Update window title with collectible count
-    char title[50];
-    sprintf(title, "Cube! - Collectibles: %d/3", app->scene.collected_count);
+    int remaining = app->scene.total_collectibles - app->scene.collected_count;
+    char title[80];
+    if (remaining > 0)
+    {
+        sprintf(title, "Cube! - Collectibles: %d/%d (%d left)", app->scene.collected_count, app->scene.total_collectibles, remaining);
+    }
+    else
+    {
+        sprintf(title, "Cube! - Collectibles: %d/%d - all collected!", app->scene.collected_count, app->scene.total_collectibles);
+    }
     SDL_SetWindowTitle(app->window, title);
+
+    draw_collectible_hud(&(app->scene), app->window);
 
     SDL_GL_SwapWindow(app->window);
 }

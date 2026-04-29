@@ -8,7 +8,7 @@ static const int LEVEL_WIDTH = 16;
 static const int LEVEL_HEIGHT = 16;
 static const int LEVEL_START_X = 1;
 static const int LEVEL_START_Y = 1;
-static int level[16][16] = {
+static const int LEVEL_TEMPLATE[16][16] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
@@ -24,7 +24,37 @@ static int level[16][16] = {
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+static int level[16][16];
+
+static void reset_tiles(void)
+{
+    for (int y = 0; y < LEVEL_HEIGHT; ++y)
+    {
+        for (int x = 0; x < LEVEL_WIDTH; ++x)
+        {
+            level[y][x] = LEVEL_TEMPLATE[y][x];
+        }
+    }
+}
+
+static int count_total_collectibles(void)
+{
+    int total = 0;
+    for (int y = 0; y < LEVEL_HEIGHT; ++y)
+    {
+        for (int x = 0; x < LEVEL_WIDTH; ++x)
+        {
+            if (LEVEL_TEMPLATE[y][x] == 4)
+            {
+                total++;
+            }
+        }
+    }
+    return total;
+}
 
 static bool is_valid_tile(int x, int y)
 {
@@ -179,6 +209,34 @@ static void start_cube_roll(ModelInstance *instance, int dx, int dy, bool will_f
     instance->is_rolling = true;
 }
 
+static void reset_scene_state(Scene *scene)
+{
+    reset_tiles();
+    scene->collected_count = 0;
+    scene->finished = false;
+    scene->active_model = 0;
+    scene->time_counter = 0.0f;
+
+    for (int i = 0; i < scene->model_count; ++i)
+    {
+        scene->instances[i].position = (vec3){(float)LEVEL_START_X, (float)LEVEL_START_Y, -2.0f};
+        scene->instances[i].rotation = (vec3){0.0f, 0.0f, 0.0f};
+        scene->instances[i].scale = (vec3){1.0f, 1.0f, 1.0f};
+        scene->instances[i].can_move = true;
+        scene->instances[i].rotates = false;
+        scene->instances[i].is_rolling = false;
+        scene->instances[i].will_fall = false;
+        scene->instances[i].is_falling = false;
+        scene->instances[i].fall_velocity = 0.0f;
+        scene->instances[i].target_position = scene->instances[i].position;
+        scene->instances[i].move_direction = (vec3){0.0f, 0.0f, 0.0f};
+        scene->instances[i].roll_axis = (vec3){0.0f, 0.0f, 0.0f};
+        scene->instances[i].pivot_center = (vec3){0.0f, 0.0f, 0.0f};
+        scene->instances[i].remaining_angle = 0.0f;
+        scene->instances[i].animation_angle = 0.0f;
+    }
+}
+
 void move_active_model(Scene *scene, int dx, int dy)
 {
     if (scene->active_model < 0 || scene->active_model >= scene->model_count)
@@ -204,8 +262,10 @@ void init_scene(Scene *scene)
     scene->model_count = 0;
     scene->active_model = 0;
     scene->collected_count = 0;
+    scene->total_collectibles = count_total_collectibles();
     scene->time_counter = 0.0f;
     scene->finished = false;
+    reset_tiles();
 
     if (load_model(&(scene->models[scene->model_count]), "assets/models/cube.obj") == TRUE)
     {
@@ -292,9 +352,22 @@ void update_scene(Scene *scene, double delta_time)
                 if (instance->rotation.z >= 360.0f)
                     instance->rotation.z -= 360.0f;
 
-                if (i == scene->active_model && !scene->finished && (int)instance->position.x == 14 && (int)instance->position.y == 14)
+                if (i == scene->active_model && !scene->finished)
                 {
-                    scene->finished = true;
+                    int px = (int)instance->position.x;
+                    int py = (int)instance->position.y;
+                    if (px >= 0 && px < LEVEL_WIDTH && py >= 0 && py < LEVEL_HEIGHT)
+                    {
+                        if (level[py][px] == 4)
+                        {
+                            scene->collected_count++;
+                            level[py][px] = 1;
+                        }
+                        if (px == 14 && py == 14)
+                        {
+                            scene->finished = true;
+                        }
+                    }
                 }
 
                 if (instance->will_fall)
@@ -311,19 +384,14 @@ void update_scene(Scene *scene, double delta_time)
             instance->position.z -= instance->fall_velocity * (float)delta_time;
             if (instance->position.z < -7.0f)
             {
-                instance->position.x = (float)LEVEL_START_X;
-                instance->position.y = (float)LEVEL_START_Y;
-                instance->position.z = -2.0f;
-                instance->rotation = (vec3){0.0f, 0.0f, 0.0f};
-                instance->is_falling = false;
-                instance->will_fall = false;
-                instance->is_rolling = false;
-                instance->fall_velocity = 0.0f;
-                scene->finished = false;
+                reset_scene_state(scene);
+                return;
             }
         }
     }
 }
+
+static void draw_green_dots(void);
 
 void render_scene(const Scene *scene)
 {
