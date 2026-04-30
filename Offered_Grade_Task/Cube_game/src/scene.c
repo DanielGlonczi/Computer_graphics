@@ -24,8 +24,7 @@ static const int LEVEL_TEMPLATE[16][16] = {
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 static int level[16][16];
 
@@ -146,7 +145,7 @@ static void draw_floor_grid(void)
     glEnable(GL_LIGHTING);
 }
 
-static void draw_floor_tiles(bool finished)
+static void draw_floor_tiles(bool finished, bool failed_finish)
 {
     for (int y = 0; y < LEVEL_HEIGHT; ++y)
     {
@@ -155,7 +154,12 @@ static void draw_floor_tiles(bool finished)
             int type = level[y][x];
             if (type == 1 || type == 3 || type == 4 || type == 5)
             {
-                draw_tile(x, y, finished ? 3 : type);
+                if (finished)
+                    draw_tile(x, y, 3);
+                else if (failed_finish)
+                    draw_tile(x, y, 5);
+                else
+                    draw_tile(x, y, type);
             }
         }
     }
@@ -214,6 +218,8 @@ static void reset_scene_state(Scene *scene)
     reset_tiles();
     scene->collected_count = 0;
     scene->finished = false;
+    scene->failed_finish = false;
+    scene->failed_timer = 0.0f;
     scene->active_model = 0;
     scene->time_counter = 0.0f;
 
@@ -265,6 +271,8 @@ void init_scene(Scene *scene)
     scene->total_collectibles = count_total_collectibles();
     scene->time_counter = 0.0f;
     scene->finished = false;
+    scene->failed_finish = false;
+    scene->failed_timer = 0.0f;
     reset_tiles();
 
     if (load_model(&(scene->models[scene->model_count]), "assets/models/cube.obj") == TRUE)
@@ -320,6 +328,15 @@ void set_material(const Material *material)
 
 void update_scene(Scene *scene, double delta_time)
 {
+    if (scene->failed_timer > 0.0f)
+    {
+        scene->failed_timer -= (float)delta_time;
+        if (scene->failed_timer <= 0.0f)
+        {
+            scene->failed_finish = false;
+        }
+    }
+
     for (int i = 0; i < scene->model_count; ++i)
     {
         ModelInstance *instance = &scene->instances[i];
@@ -365,7 +382,15 @@ void update_scene(Scene *scene, double delta_time)
                         }
                         if (px == 14 && py == 14)
                         {
-                            scene->finished = true;
+                            if (scene->collected_count == scene->total_collectibles)
+                            {
+                                scene->finished = true;
+                            }
+                            else
+                            {
+                                scene->failed_finish = true;
+                                scene->failed_timer = 2.0f;
+                            }
                         }
                     }
                 }
@@ -398,7 +423,7 @@ void render_scene(const Scene *scene)
     set_material(&(scene->material));
     set_lighting();
     draw_origin();
-    draw_floor_tiles(scene->finished);
+    draw_floor_tiles(scene->finished, scene->failed_finish);
     draw_floor_grid();
 
     for (int i = 0; i < scene->model_count; ++i)

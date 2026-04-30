@@ -38,6 +38,8 @@ typedef struct Scene
     int total_collectibles;
     float time_counter;
     bool finished;
+    bool failed_finish;
+    float failed_timer;
 } Scene;
 
 /**
