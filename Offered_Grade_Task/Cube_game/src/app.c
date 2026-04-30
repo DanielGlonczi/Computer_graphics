@@ -3,6 +3,80 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 
+static bool load_background_texture(App *app, const char *path)
+{
+    SDL_Surface *surface = IMG_Load(path);
+    if (surface == NULL)
+    {
+        printf("[ERROR] Unable to load background image '%s': %s\n", path, IMG_GetError());
+        return false;
+    }
+
+    SDL_Surface *converted = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
+    SDL_FreeSurface(surface);
+    if (converted == NULL)
+    {
+        printf("[ERROR] Failed to convert background surface: %s\n", SDL_GetError());
+        return false;
+    }
+
+    glGenTextures(1, &(app->background_texture));
+    glBindTexture(GL_TEXTURE_2D, app->background_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, converted->w, converted->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, converted->pixels);
+    SDL_FreeSurface(converted);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return true;
+}
+
+static void draw_background(App *app)
+{
+    if (app->background_texture == 0)
+        return;
+
+    int width, height;
+    SDL_GetWindowSize(app->window, &width, &height);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, (double)width, 0.0, (double)height, -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, app->background_texture);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(0.0f, 0.0f);
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex2f((float)width, 0.0f);
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex2f((float)width, (float)height);
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex2f(0.0f, (float)height);
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void init_app(App *app, int width, int height)
 {
     int error_code;
@@ -28,8 +102,8 @@ void init_app(App *app, int width, int height)
         return;
     }
 
-    inited_loaders = IMG_Init(IMG_INIT_PNG);
-    if (inited_loaders == 0)
+    inited_loaders = IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+    if ((inited_loaders & (IMG_INIT_PNG | IMG_INIT_JPG)) == 0)
     {
         printf("[ERROR] IMG initialization error: %s\n", IMG_GetError());
         return;
@@ -41,6 +115,9 @@ void init_app(App *app, int width, int height)
         printf("[ERROR] Unable to create the OpenGL context!\n");
         return;
     }
+
+    app->background_texture = 0;
+    load_background_texture(app, "assets/images/bg_image.jpg");
 
     init_opengl();
     reshape(width, height);
@@ -275,6 +352,8 @@ void render_app(App *app)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
 
+    draw_background(app);
+
     glPushMatrix();
     set_view(&(app->camera));
     render_scene(&(app->scene));
@@ -299,6 +378,11 @@ void render_app(App *app)
 
 void destroy_app(App *app)
 {
+    if (app->background_texture != 0)
+    {
+        glDeleteTextures(1, &(app->background_texture));
+    }
+
     if (app->gl_context != NULL)
     {
         SDL_GL_DeleteContext(app->gl_context);
