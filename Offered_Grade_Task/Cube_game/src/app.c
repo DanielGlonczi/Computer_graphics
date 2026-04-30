@@ -100,7 +100,7 @@ void reshape(GLsizei width, GLsizei height)
     glFrustum(
         -.08, .08,
         -.06, .06,
-        .1, 10);
+        .1, 100);
 }
 
 void handle_app_events(App *app)
@@ -209,9 +209,13 @@ void update_app(App *app)
 
     // Set camera target to follow the active cube
     vec3 cube_pos = app->scene.instances[app->scene.active_model].position;
+
+    // Start with a wider view for the first 2 seconds
+    float distance_factor = (app->uptime < 2.0) ? 1.8f : 1.0f;
+
     app->camera.target_position.x = cube_pos.x;
-    app->camera.target_position.y = cube_pos.y - 5.0f;
-    app->camera.target_position.z = cube_pos.z + 3.0f;
+    app->camera.target_position.y = cube_pos.y - 5.0f * distance_factor;
+    app->camera.target_position.z = cube_pos.z + 3.0f * distance_factor;
 
     update_camera(&(app->camera), elapsed_time);
     update_scene(&(app->scene), elapsed_time);
